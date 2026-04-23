@@ -4,7 +4,7 @@ import os
 import re
 from pathlib import Path
 
-from .parser import split_markdown, markdown_to_html
+from .parser import split_markdown, markdown_to_html, process_latex
 from .code_renderer import render_code_to_image
 from .template import render_html
 
@@ -76,7 +76,8 @@ def convert_file(
 
     for part_type, content in parts:
         if part_type == "text":
-            # 普通文本用 markdown 解析
+            # 普通文本：先处理 LaTeX 公式，再转 HTML
+            content = process_latex(content)
             html = markdown_to_html(content)
             body_parts.append(html)
         elif part_type == "code":
@@ -99,6 +100,13 @@ def convert_file(
 
     # 给表格加滚动容器
     body_html = _wrap_tables(body_html)
+
+    # 推荐练习标题自动备注来源
+    body_html = re.sub(
+        r'(<h[1-6][^>]*>)推荐练习(</h[1-6]>)',
+        r'\1推荐练习（洛谷）\2',
+        body_html,
+    )
 
     # 渲染完整页面
     full_html = render_html(title=title, body_html=body_html)

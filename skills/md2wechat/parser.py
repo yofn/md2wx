@@ -1,6 +1,7 @@
 """Markdown 解析器：将文本分割为普通文本和代码块片段"""
 
 import re
+import urllib.parse
 import markdown
 
 # 匹配 ```lang\ncode\n``` 格式的代码块
@@ -55,6 +56,43 @@ def split_markdown(text: str):
         parts.append(("text", text[last_end:]))
 
     return parts
+
+
+def _latex_url(formula: str) -> str:
+    """将 LaTeX 公式编码为 codecogs 图片 URL。"""
+    encoded = urllib.parse.quote(formula.strip())
+    return f"https://latex.codecogs.com/png.latex?{encoded}"
+
+
+def process_latex(text: str) -> str:
+    """
+    将 Markdown 中的 LaTeX 公式替换为图片标签。
+    支持 $$...$$ 块级公式和 $...$ 行内公式。
+    """
+    # 先处理块级公式 $$...$$
+    def _block_repl(m):
+        formula = m.group(1).strip()
+        url = _latex_url(formula)
+        return (
+            f'<div style="text-align:center;margin:16px 0;">'
+            f'<img src="{url}" style="max-width:100%;height:auto;" alt="{formula}">'
+            f'</div>'
+        )
+
+    text = re.sub(r'\$\$(.*?)\$\$', _block_repl, text, flags=re.DOTALL)
+
+    # 再处理行内公式 $...$
+    def _inline_repl(m):
+        formula = m.group(1).strip()
+        url = _latex_url(formula)
+        return (
+            f'<img src="{url}" '
+            f'style="vertical-align:middle;height:1.2em;display:inline;" '
+            f'alt="{formula}">'
+        )
+
+    text = re.sub(r'\$(.*?)\$', _inline_repl, text)
+    return text
 
 
 def markdown_to_html(text: str) -> str:

@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>搜索剪枝</title>
+    <style>
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                         "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+                         "Apple Color Emoji", "Segoe UI Emoji";
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.8;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 内容容器：手机宽度适配 */
+        .article-container {
+            max-width: 375px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            background-color: #fff;
+            min-height: 100vh;
+        }
+
+        /* 文章标题 */
+        .article-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a1a;
+            line-height: 1.4;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        /* 正文段落：18px 约 20 字/行 */
+        .article-body p {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 16px;
+            text-align: justify;
+            word-break: break-word;
+        }
+
+        /* 各级标题 */
+        .article-body h1 {
+            font-size: 19px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin: 24px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .article-body h2 {
+            font-size: 18px;
+            font-weight: bold;
+            color: #222;
+            margin: 20px 0 10px 0;
+        }
+
+        .article-body h3 {
+            font-size: 17px;
+            font-weight: bold;
+            color: #333;
+            margin: 16px 0 8px 0;
+        }
+
+        /* 引用块 */
+        .article-body blockquote {
+            margin: 16px 0;
+            padding: 12px 16px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #d0d7de;
+            color: #57606a;
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        .article-body blockquote p {
+            margin-bottom: 0;
+            font-size: 17px;
+        }
+
+        /* 代码图片 */
+        .code-image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 12px 0;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* 表格容器：横向滚动 */
+        .article-body .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .article-body table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+            min-width: 300px;
+        }
+
+        .article-body th,
+        .article-body td {
+            padding: 8px 10px;
+            border: 1px solid #d0d7de;
+            text-align: left;
+        }
+
+        .article-body th {
+            background-color: #f6f8fa;
+            font-weight: 600;
+        }
+
+        .article-body tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        /* 列表 */
+        .article-body ul,
+        .article-body ol {
+            margin: 12px 0 12px 24px;
+            font-size: 18px;
+            line-height: 1.8;
+        }
+
+        .article-body li {
+            margin-bottom: 6px;
+        }
+
+        /* 链接 */
+        .article-body a {
+            color: #0969da;
+            text-decoration: none;
+        }
+
+        .article-body a:hover {
+            text-decoration: underline;
+        }
+
+        /* 分隔线 */
+        .article-body hr {
+            border: none;
+            border-top: 1px solid #e1e4e8;
+            margin: 20px 0;
+        }
+
+        /* 强调 */
+        .article-body strong {
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+
+        .article-body em {
+            font-style: italic;
+        }
+
+        /* 行内代码（如果存在） */
+        .article-body code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 15px;
+            background-color: #f6f8fa;
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: #cf222e;
+        }
+
+        /* 脚注/小字 */
+        .article-body sub,
+        .article-body sup {
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="article-container">
+        
+        <div class="article-title">搜索剪枝</div>
+        
+        <div class="article-body">
+            <p>剪枝（Pruning）是搜索中最关键的优化手段。它的核心思想是：<strong>在搜索过程中，一旦发现当前分支不可能产生有效解，就立即停止该分支的搜索，从而节省大量时间</strong>。</p>
+<blockquote>
+<p>💡 "不搜" 比 "搜得快" 更重要。</p>
+</blockquote>
+<hr />
+<h2>为什么需要剪枝？</h2>
+<p>以 N 皇后问题为例：</p>
+<ul>
+<li>
+<p>不加剪枝：需要枚举 <img src="https://latex.codecogs.com/png.latex?n%5En" style="vertical-align:middle;height:1.2em;display:inline;" alt="n^n"> 种放置方案</p>
+</li>
+<li>
+<p>加入基本剪枝：同一列、同一对角线不能放，枚举量大幅下降</p>
+</li>
+<li>加入更强剪枝：可以进一步减少无效搜索</li>
+</ul>
+<p>CSP 考试中，第 2~3 题的搜索题通常<strong>不剪枝就会超时</strong>，因此剪枝是必备技能。</p>
+<hr />
+<h2>剪枝的分类</h2>
+<h3>一、可行性剪枝（新手必须掌握）</h3>
+<p><strong>定义：</strong> 当前分支已经违反了题目的硬性约束，不可能得到合法解，直接返回。</p>
+<p><strong>典型场景：</strong></p>
+<ul>
+<li>N 皇后中，同一列或对角线已有皇后</li>
+<li>
+<p>走迷宫时，下一步是障碍物或越界</p>
+</li>
+<li>
+<p>背包问题中，当前重量已超过容量</p>
+</li>
+</ul>
+<p><strong>示例：N 皇后的列剪枝</strong></p>
+<img class="code-image" src="images/code_0.png" alt="code">
+<p><strong>示例：迷宫越界剪枝</strong></p>
+<img class="code-image" src="images/code_1.png" alt="code">
+<hr />
+<h3>二、最优性剪枝（挑战版重点）</h3>
+<p><strong>定义：</strong> 当前分支即使走到最后，也不可能比已找到的最优解更好，直接返回。</p>
+<p><strong>典型场景：</strong></p>
+<ul>
+<li>求最短路径时，当前步数已不少于已找到的最优解</li>
+<li>
+<p>求最小花费时，当前花费已超过已找到的最小值</p>
+</li>
+<li>
+<p>求最大价值时，当前价值加上剩余全部价值也不超过已找到的最大值</p>
+</li>
+</ul>
+<p><strong>示例：求最短路径的步数剪枝</strong></p>
+<img class="code-image" src="images/code_2.png" alt="code">
+<p><strong>示例：剩余价值上界剪枝（背包/选数类）</strong></p>
+<img class="code-image" src="images/code_3.png" alt="code">
+<hr />
+<h3>三、重复性剪枝（挑战版重点）</h3>
+<p><strong>定义：</strong> 避免搜索等价的状态，防止同一解被多次枚举。</p>
+<p><strong>典型场景：</strong></p>
+<ul>
+<li>组合枚举时，<img src="https://latex.codecogs.com/png.latex?%5C%7B1%2C2%5C%7D" style="vertical-align:middle;height:1.2em;display:inline;" alt="\{1,2\}"> 和 <img src="https://latex.codecogs.com/png.latex?%5C%7B2%2C1%5C%7D" style="vertical-align:middle;height:1.2em;display:inline;" alt="\{2,1\}"> 是同一个组合</li>
+<li>
+<p>排列枚举时，通过规定顺序避免重复</p>
+</li>
+<li>
+<p>对称状态的去除</p>
+</li>
+</ul>
+<p><strong>示例：组合枚举去重</strong></p>
+<img class="code-image" src="images/code_4.png" alt="code">
+<hr />
+<h2>剪枝策略速查表</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align: left;">剪枝类型</th>
+<th style="text-align: left;">判断依据</th>
+<th style="text-align: left;">适用场景</th>
+<th style="text-align: center;">难度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>可行性剪枝</strong></td>
+<td style="text-align: left;">当前状态已违反约束</td>
+<td style="text-align: left;">所有搜索题</td>
+<td style="text-align: center;">入门</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>最优性剪枝（当前值）</strong></td>
+<td style="text-align: left;">当前值已不优于最优解</td>
+<td style="text-align: left;">求最值</td>
+<td style="text-align: center;">普及</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>最优性剪枝（上界/下界）</strong></td>
+<td style="text-align: left;">当前值 + 剩余潜力 不优于最优解</td>
+<td style="text-align: left;">求最值、背包</td>
+<td style="text-align: center;">提高</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>重复性剪枝</strong></td>
+<td style="text-align: left;">当前状态与之前某个状态等价</td>
+<td style="text-align: left;">组合枚举、对称问题</td>
+<td style="text-align: center;">提高</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>预处理排序剪枝</strong></td>
+<td style="text-align: left;">按某种顺序处理，优先搜索更可能的分支</td>
+<td style="text-align: left;">数独、图着色</td>
+<td style="text-align: center;">提高</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>新手 vs 挑战版剪枝要求</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align: left;">级别</th>
+<th style="text-align: left;">要求</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>新手版</strong></td>
+<td style="text-align: left;">掌握可行性剪枝</td>
+<td style="text-align: left;">遇到不合法状态立即返回，这是所有搜索题的基础</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>挑战版</strong></td>
+<td style="text-align: left;">熟练最优性剪枝 + 重复性剪枝</td>
+<td style="text-align: left;">在时间限制内找到最优解，需要强力剪枝</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>推荐练习（洛谷）</h2>
+<h3>新手剪枝入门</h3>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align: center;">题号</th>
+<th style="text-align: left;">题目</th>
+<th style="text-align: left;">难度</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1605">P1605</a></td>
+<td style="text-align: left;">迷宫</td>
+<td style="text-align: left;">普及-</td>
+<td style="text-align: left;">基础可行性剪枝（越界、障碍物）</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1219">P1219</a></td>
+<td style="text-align: left;">八皇后</td>
+<td style="text-align: left;">普及</td>
+<td style="text-align: left;">列 + 对角线可行性剪枝</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1025">P1025</a></td>
+<td style="text-align: left;">数的划分</td>
+<td style="text-align: left;">普及+</td>
+<td style="text-align: left;">简单可行性剪枝</td>
+</tr>
+</tbody>
+</table></div>
+<h3>挑战版剪枝进阶</h3>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align: center;">题号</th>
+<th style="text-align: left;">题目</th>
+<th style="text-align: left;">难度</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1120">P1120</a></td>
+<td style="text-align: left;">小木棍</td>
+<td style="text-align: left;">提高-</td>
+<td style="text-align: left;">经典强剪枝题目</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1079">P1079</a></td>
+<td style="text-align: left;">靶形数独</td>
+<td style="text-align: left;">提高-</td>
+<td style="text-align: left;">多种剪枝策略结合</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1312">P1312</a></td>
+<td style="text-align: left;">Mayan游戏</td>
+<td style="text-align: left;">提高+/省选-</td>
+<td style="text-align: left;">复杂模拟 + 强力剪枝</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P3067">P3067</a></td>
+<td style="text-align: left;">Balanced Cow Subsets G</td>
+<td style="text-align: left;">提高+/省选-</td>
+<td style="text-align: left;">折半搜索 + 剪枝</td>
+</tr>
+</tbody>
+</table></div>
+        </div>
+    </div>
+</body>
+</html>

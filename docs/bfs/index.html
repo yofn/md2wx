@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>栈式深搜（基础 DFS）</title>
+    <title>广度优先搜索 BFS</title>
     <style>
         /* 基础重置 */
         * {
@@ -190,94 +190,41 @@
 <body>
     <div class="article-container">
         
-        <div class="article-title">栈式深搜（基础 DFS）</div>
+        <div class="article-title">广度优先搜索 BFS</div>
         
         <div class="article-body">
-            <p>深度优先搜索（DFS）的核心思想是：<strong>沿着一条路径尽可能深地搜索，直到无法继续再回溯</strong>。</p>
-<p>本章介绍的「栈式深搜」是指：<strong>整个搜索过程仅靠函数调用栈（或显式栈）来维护状态，不需要额外的全局状态数组来记录"选择了什么"</strong>。这是最基础的 DFS 形式，也是新手必须首先掌握的。</p>
-<hr />
-<h2>与回溯法的区别</h2>
+            <p>BFS 逐层扩展，先访问距离起点近的节点。</p>
+<img class="code-image" src="images/code_0.png" alt="code">
+<h2>BFS vs DFS</h2>
 <div class="table-wrapper"><table>
 <thead>
 <tr>
-<th style="text-align: left;">特性</th>
-<th style="text-align: left;">栈式深搜</th>
-<th style="text-align: left;">回溯法</th>
+<th>特性</th>
+<th>BFS</th>
+<th>DFS</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">状态维护</td>
-<td style="text-align: left;">仅靠函数参数和局部变量</td>
-<td style="text-align: left;">需要外部数组/变量记录选择</td>
+<td>空间</td>
+<td><img src="https://latex.codecogs.com/png.latex?O%28n%29" style="vertical-align:middle;height:1.2em;display:inline;" alt="O(n)"> 或 <img src="https://latex.codecogs.com/png.latex?O%28w%29" style="vertical-align:middle;height:1.2em;display:inline;" alt="O(w)">（最宽层）</td>
+<td><img src="https://latex.codecogs.com/png.latex?O%28h%29" style="vertical-align:middle;height:1.2em;display:inline;" alt="O(h)">（递归深度）</td>
 </tr>
 <tr>
-<td style="text-align: left;">是否需要"撤销"</td>
-<td style="text-align: left;">❌ 不需要</td>
-<td style="text-align: left;">✅ 需要</td>
+<td>最短路径</td>
+<td>✅ 无权图最短</td>
+<td>❌ 不保证</td>
 </tr>
 <tr>
-<td style="text-align: left;">典型应用</td>
-<td style="text-align: left;">连通块、图遍历、简单枚举</td>
-<td style="text-align: left;">排列组合、子集、N 皇后</td>
-</tr>
-<tr>
-<td style="text-align: left;">代码复杂度</td>
-<td style="text-align: left;">简单</td>
-<td style="text-align: left;">稍复杂</td>
+<td>适用场景</td>
+<td>最短路径、层级遍历</td>
+<td>连通性、回溯、全排列</td>
 </tr>
 </tbody>
 </table></div>
 <blockquote>
-<p>如果你写 DFS 时不需要 <code>vis[x] = true</code> 之后再 <code>vis[x] = false</code>，那就是<strong>栈式深搜</strong>；如果需要"选了再取消"，那就是<strong>回溯法</strong>。</p>
+<p>BFS 是 CSP 第 2~3 题中求最短步数、最少操作的标准解法。</p>
 </blockquote>
-<hr />
-<h2>递归实现</h2>
-<p>用递归函数调用栈隐式维护访问状态和路径，代码最简洁。</p>
-<img class="code-image" src="images/code_0.png" alt="code">
-<p><strong>关键点：</strong></p>
-<ul>
-<li><code>vis[u] = true</code> 后<strong>不需要</strong>在递归返回时改回 <code>false</code></li>
-<li>因为每个节点只需要访问一次，状态是单向的</li>
-</ul>
-<hr />
-<h2>非递归实现（显式栈）</h2>
-<p>某些场景下（如需要精细控制遍历顺序，或担心递归深度过大），可以用显式栈代替递归。</p>
-<img class="code-image" src="images/code_1.png" alt="code">
-<blockquote>
-<p>显式栈的版本在 CSP 中较少用到，但了解它有助于理解递归的本质。</p>
-</blockquote>
-<hr />
-<h2>经典模型：连通块</h2>
-<p>统计无向图中连通分量的数量：</p>
-<img class="code-image" src="images/code_2.png" alt="code">
-<hr />
-<h2>经典模型：全排列（简单枚举）</h2>
-<p>用 DFS 枚举 <img src="https://latex.codecogs.com/png.latex?1%20%5Csim%20n" style="vertical-align:middle;height:1.2em;display:inline;" alt="1 \sim n"> 的全排列：</p>
-<img class="code-image" src="images/code_3.png" alt="code">
-<blockquote>
-<p>等等，这个例子里有 <code>used[i] = false</code>，那它是不是回溯法？</p>
-<p><strong>答案是：这是回溯法。</strong> 因为每个数只能用一次，需要外部数组 <code>used[]</code> 记录"选了什么"，并在递归返回后撤销。</p>
-<p>全排列的更好归属是<a href="./dfs-backtrack.md">回溯法</a>。本章的栈式深搜，重点是<strong>不需要撤销</strong>的场景。</p>
-</blockquote>
-<hr />
-<h2>什么时候用栈式深搜？</h2>
-<p>✅ <strong>适合栈式深搜：</strong></p>
-<ul>
-<li>图的遍历、连通块统计</li>
-<li>
-<p>树的深度优先遍历</p>
-</li>
-<li>
-<p>每个状态只需要访问一次，不需要"尝试再取消"</p>
-</li>
-</ul>
-<p>❌ <strong>不适合栈式深搜（应使用回溯法）：</strong></p>
-<ul>
-<li>需要从多个选择中选一个，选完还要试别的（如 N 皇后、数独）</li>
-<li>需要枚举所有方案并比较（如最短路径的所有可能）</li>
-</ul>
-<hr />
 <h2>推荐练习（洛谷）</h2>
 <div class="table-wrapper"><table>
 <thead>
@@ -290,28 +237,40 @@
 </thead>
 <tbody>
 <tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1443">P1443</a></td>
+<td style="text-align: left;">马的遍历</td>
+<td style="text-align: left;">入门+</td>
+<td style="text-align: left;">基础 BFS 求最短路径</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1162">P1162</a></td>
+<td style="text-align: left;">填涂颜色</td>
+<td style="text-align: left;">普及-</td>
+<td style="text-align: left;">多源 BFS / Flood Fill</td>
+</tr>
+<tr>
 <td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1605">P1605</a></td>
 <td style="text-align: left;">迷宫</td>
 <td style="text-align: left;">普及-</td>
-<td style="text-align: left;">DFS 走迷宫</td>
+<td style="text-align: left;">基础 BFS 走迷宫</td>
 </tr>
 <tr>
-<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P2661">P2661</a></td>
-<td style="text-align: left;">信息传递</td>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1746">P1746</a></td>
+<td style="text-align: left;">离开中山路</td>
 <td style="text-align: left;">普及</td>
-<td style="text-align: left;">找最小环（DFS / 并查集）</td>
+<td style="text-align: left;">带权边 BFS（0-1 BFS 基础）</td>
 </tr>
 <tr>
-<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P3916">P3916</a></td>
-<td style="text-align: left;">图的遍历</td>
-<td style="text-align: left;">普及</td>
-<td style="text-align: left;">反向建图 + DFS</td>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1078">P1078</a></td>
+<td style="text-align: left;">文化之旅</td>
+<td style="text-align: left;">提高-</td>
+<td style="text-align: left;">状态压缩 + BFS</td>
 </tr>
 <tr>
-<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P2853">P2853</a></td>
-<td style="text-align: left;">Cow Picnic S</td>
-<td style="text-align: left;">普及+</td>
-<td style="text-align: left;">多源 DFS 统计</td>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1462">P1462</a></td>
+<td style="text-align: left;">通往奥格瑞玛的道路</td>
+<td style="text-align: left;">提高</td>
+<td style="text-align: left;">二分答案 + BFS 判连通</td>
 </tr>
 </tbody>
 </table></div>

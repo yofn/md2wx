@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>栈式深搜（基础 DFS）</title>
+    <title>回溯法</title>
     <style>
         /* 基础重置 */
         * {
@@ -190,93 +190,83 @@
 <body>
     <div class="article-container">
         
-        <div class="article-title">栈式深搜（基础 DFS）</div>
+        <div class="article-title">回溯法</div>
         
         <div class="article-body">
-            <p>深度优先搜索（DFS）的核心思想是：<strong>沿着一条路径尽可能深地搜索，直到无法继续再回溯</strong>。</p>
-<p>本章介绍的「栈式深搜」是指：<strong>整个搜索过程仅靠函数调用栈（或显式栈）来维护状态，不需要额外的全局状态数组来记录"选择了什么"</strong>。这是最基础的 DFS 形式，也是新手必须首先掌握的。</p>
+            <p>回溯法是 DFS 的一种特殊形式，其核心特征是：<strong>在搜索过程中需要维护一个"全局状态"来记录当前的选择，并且在递归返回时必须将这个状态撤销</strong>。</p>
+<p>通俗地说：栈式深搜是"走过了就标记，不再回头"；回溯法是"试一试，不行就撤销，再试别的"。</p>
 <hr />
-<h2>与回溯法的区别</h2>
+<h2>核心框架</h2>
+<p>所有回溯问题都可以抽象为同一个代码框架：</p>
+<img class="code-image" src="images/code_0.png" alt="code">
+<p><strong>三要素：</strong>
+1. <strong>路径</strong>：已经做出的选择
+2. <strong>选择列表</strong>：当前可以做的选择
+3. <strong>结束条件</strong>：到达决策树底层，无法再做选择</p>
+<hr />
+<h2>经典例题：N 皇后</h2>
+<p>在 <img src="https://latex.codecogs.com/png.latex?n%20%5Ctimes%20n" style="vertical-align:middle;height:1.2em;display:inline;" alt="n \times n"> 的棋盘上放置 <img src="https://latex.codecogs.com/png.latex?n" style="vertical-align:middle;height:1.2em;display:inline;" alt="n"> 个皇后，使其互不攻击。</p>
+<img class="code-image" src="images/code_1.png" alt="code">
+<blockquote>
+<p>每放完一个皇后，递归进入下一行；递归返回时，必须把这个皇后的位置清空，才能尝试下一列。</p>
+</blockquote>
+<hr />
+<h2>经典例题：全排列</h2>
+<p>枚举 <img src="https://latex.codecogs.com/png.latex?1%20%5Csim%20n" style="vertical-align:middle;height:1.2em;display:inline;" alt="1 \sim n"> 的所有排列。</p>
+<img class="code-image" src="images/code_2.png" alt="code">
+<hr />
+<h2>经典例题：子集枚举</h2>
+<p>从 <img src="https://latex.codecogs.com/png.latex?n" style="vertical-align:middle;height:1.2em;display:inline;" alt="n"> 个元素中选出若干，枚举所有子集。</p>
+<img class="code-image" src="images/code_3.png" alt="code">
+<hr />
+<h2>回溯法与栈式深搜的对比</h2>
 <div class="table-wrapper"><table>
 <thead>
 <tr>
-<th style="text-align: left;">特性</th>
+<th style="text-align: left;">维度</th>
 <th style="text-align: left;">栈式深搜</th>
 <th style="text-align: left;">回溯法</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">状态维护</td>
-<td style="text-align: left;">仅靠函数参数和局部变量</td>
-<td style="text-align: left;">需要外部数组/变量记录选择</td>
-</tr>
-<tr>
-<td style="text-align: left;">是否需要"撤销"</td>
+<td style="text-align: left;">是否需要全局状态</td>
 <td style="text-align: left;">❌ 不需要</td>
-<td style="text-align: left;">✅ 需要</td>
+<td style="text-align: left;">✅ 需要（如 <code>used[]</code>, <code>col[]</code>）</td>
 </tr>
 <tr>
-<td style="text-align: left;">典型应用</td>
-<td style="text-align: left;">连通块、图遍历、简单枚举</td>
-<td style="text-align: left;">排列组合、子集、N 皇后</td>
+<td style="text-align: left;">是否需要撤销操作</td>
+<td style="text-align: left;">❌ 不需要</td>
+<td style="text-align: left;">✅ 必须撤销</td>
 </tr>
 <tr>
-<td style="text-align: left;">代码复杂度</td>
-<td style="text-align: left;">简单</td>
-<td style="text-align: left;">稍复杂</td>
+<td style="text-align: left;">状态空间</td>
+<td style="text-align: left;">每个节点只访问一次</td>
+<td style="text-align: left;">同一节点可能多次访问（在不同路径中）</td>
+</tr>
+<tr>
+<td style="text-align: left;">典型问题</td>
+<td style="text-align: left;">连通块、图遍历</td>
+<td style="text-align: left;">排列、组合、子集、N 皇后、数独</td>
+</tr>
+<tr>
+<td style="text-align: left;">CSP 出现频率</td>
+<td style="text-align: left;">第 2 题</td>
+<td style="text-align: left;">第 2~3 题</td>
 </tr>
 </tbody>
 </table></div>
-<blockquote>
-<p>如果你写 DFS 时不需要 <code>vis[x] = true</code> 之后再 <code>vis[x] = false</code>，那就是<strong>栈式深搜</strong>；如果需要"选了再取消"，那就是<strong>回溯法</strong>。</p>
-</blockquote>
 <hr />
-<h2>递归实现</h2>
-<p>用递归函数调用栈隐式维护访问状态和路径，代码最简洁。</p>
-<img class="code-image" src="images/code_0.png" alt="code">
-<p><strong>关键点：</strong></p>
-<ul>
-<li><code>vis[u] = true</code> 后<strong>不需要</strong>在递归返回时改回 <code>false</code></li>
-<li>因为每个节点只需要访问一次，状态是单向的</li>
-</ul>
-<hr />
-<h2>非递归实现（显式栈）</h2>
-<p>某些场景下（如需要精细控制遍历顺序，或担心递归深度过大），可以用显式栈代替递归。</p>
-<img class="code-image" src="images/code_1.png" alt="code">
-<blockquote>
-<p>显式栈的版本在 CSP 中较少用到，但了解它有助于理解递归的本质。</p>
-</blockquote>
-<hr />
-<h2>经典模型：连通块</h2>
-<p>统计无向图中连通分量的数量：</p>
-<img class="code-image" src="images/code_2.png" alt="code">
-<hr />
-<h2>经典模型：全排列（简单枚举）</h2>
-<p>用 DFS 枚举 <img src="https://latex.codecogs.com/png.latex?1%20%5Csim%20n" style="vertical-align:middle;height:1.2em;display:inline;" alt="1 \sim n"> 的全排列：</p>
-<img class="code-image" src="images/code_3.png" alt="code">
-<blockquote>
-<p>等等，这个例子里有 <code>used[i] = false</code>，那它是不是回溯法？</p>
-<p><strong>答案是：这是回溯法。</strong> 因为每个数只能用一次，需要外部数组 <code>used[]</code> 记录"选了什么"，并在递归返回后撤销。</p>
-<p>全排列的更好归属是<a href="./dfs-backtrack.md">回溯法</a>。本章的栈式深搜，重点是<strong>不需要撤销</strong>的场景。</p>
-</blockquote>
-<hr />
-<h2>什么时候用栈式深搜？</h2>
-<p>✅ <strong>适合栈式深搜：</strong></p>
-<ul>
-<li>图的遍历、连通块统计</li>
-<li>
-<p>树的深度优先遍历</p>
-</li>
-<li>
-<p>每个状态只需要访问一次，不需要"尝试再取消"</p>
-</li>
-</ul>
-<p>❌ <strong>不适合栈式深搜（应使用回溯法）：</strong></p>
-<ul>
-<li>需要从多个选择中选一个，选完还要试别的（如 N 皇后、数独）</li>
-<li>需要枚举所有方案并比较（如最短路径的所有可能）</li>
-</ul>
+<h2>常见陷阱</h2>
+<h3>陷阱 1：忘记撤销</h3>
+<img class="code-image" src="images/code_4.png" alt="code">
+<p>后果：后续分支无法使用 <code>i</code>，导致漏解或死循环。</p>
+<h3>陷阱 2：在叶子节点撤销</h3>
+<img class="code-image" src="images/code_5.png" alt="code">
+<p>后果：叶子节点不应该撤销，撤销应该在 <code>for</code> 循环的当前层完成。</p>
+<h3>陷阱 3：全局变量污染</h3>
+<img class="code-image" src="images/code_6.png" alt="code">
+<p>后果：不同递归分支的路径相互干扰。</p>
 <hr />
 <h2>推荐练习（洛谷）</h2>
 <div class="table-wrapper"><table>
@@ -290,28 +280,52 @@
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1605">P1605</a></td>
-<td style="text-align: left;">迷宫</td>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1219">P1219</a></td>
+<td style="text-align: left;">八皇后</td>
+<td style="text-align: left;">普及</td>
+<td style="text-align: left;">回溯法经典入门题</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1706">P1706</a></td>
+<td style="text-align: left;">全排列问题</td>
 <td style="text-align: left;">普及-</td>
-<td style="text-align: left;">DFS 走迷宫</td>
+<td style="text-align: left;">基础回溯框架</td>
 </tr>
 <tr>
-<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P2661">P2661</a></td>
-<td style="text-align: left;">信息传递</td>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1036">P1036</a></td>
+<td style="text-align: left;">选数</td>
+<td style="text-align: left;">普及-</td>
+<td style="text-align: left;">组合枚举 + 质数判断</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P2036">P2036</a></td>
+<td style="text-align: left;">[COCI2008-2009#2] PERKET</td>
 <td style="text-align: left;">普及</td>
-<td style="text-align: left;">找最小环（DFS / 并查集）</td>
+<td style="text-align: left;">子集枚举（回溯或二进制枚举）</td>
 </tr>
 <tr>
-<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P3916">P3916</a></td>
-<td style="text-align: left;">图的遍历</td>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P2392">P2392</a></td>
+<td style="text-align: left;">kkksc03考前临时抱佛脚</td>
 <td style="text-align: left;">普及</td>
-<td style="text-align: left;">反向建图 + DFS</td>
+<td style="text-align: left;">双线程回溯 + 剪枝</td>
 </tr>
 <tr>
-<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P2853">P2853</a></td>
-<td style="text-align: left;">Cow Picnic S</td>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1019">P1019</a></td>
+<td style="text-align: left;">单词接龙</td>
 <td style="text-align: left;">普及+</td>
-<td style="text-align: left;">多源 DFS 统计</td>
+<td style="text-align: left;">回溯 + 字符串处理</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1101">P1101</a></td>
+<td style="text-align: left;">单词方阵</td>
+<td style="text-align: left;">普及+</td>
+<td style="text-align: left;">多方向回溯</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a href="https://www.luogu.com.cn/problem/P1049">P1049</a></td>
+<td style="text-align: left;">装箱问题</td>
+<td style="text-align: left;">普及+</td>
+<td style="text-align: left;">回溯 / 背包双解</td>
 </tr>
 </tbody>
 </table></div>

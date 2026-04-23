@@ -1,4 +1,4 @@
-# md2html
+# md2wx
 
 #### Description
 从 wiki 的 markdown，转成微信公众号可用的HTML. 
